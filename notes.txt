@@ -1,0 +1,29 @@
+all of the state variables:
+	- evolutionary model (HKY85 - pi_a, pi_c, pi_g, pi_t, alpha, kappa)
+	- t: evolutionary splitting times
+	- T: tree space
+	- b: external nodes representing input sequence vectors
+	- v: internal nodes representing ancestor sequence vectors
+
+things i need
+	- metropolis algorithm
+		- transition probability function
+		
+
+	- model permuter
+		- tree permutation (v) <-- internal nodes
+		- branch length permutation (t)
+
+	- model probability function P(T, t, b, v, v_-1)
+		nucleotide_probabilities * branch_probabilities * (1/number_of_trees)
+
+	- model-probability-given-data function P(T, t, v, v_-1 | b)
+		** where the fanciness is
+
+
+1. initialization -> distance matrix/clustering
+2. iteration (metropolis algorithm)
+	a) calculate proposal
+	b) accept or reject proposal -> x' / x
+	c) if > 1: use x' as new baseline, else use x
+	d) repeat
