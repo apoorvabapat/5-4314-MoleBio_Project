@@ -1,33 +1,50 @@
 import random
 
 class Tree():
-	def __init__(self, values=[], from_leaves=False):
+	def __init__(self, values=[], from_leaves=False, randomize=False):
 		if from_leaves:
-			self.root = self.build_from_leaves(values).root
+			self.root = self.build_from_leaves(values, randomize).root
 		else:
 			self.root = self.build_tree(values)
 		self.values = values
 
-	def build_from_leaves(self, leaf_values):
+	def build_from_leaves(self, leaf_values, randomize, internal_value='*'):
 		n_internal = [i for i in range(0, len(leaf_values) - 1)]
 
 		t = Tree()
-		t.root = self.build_tree(n_internal)
+		t.root = self.build_tree(n_internal, randomize)
 		leaves = t.get_leaf_nodes()
 
 		i = 0
 		l = 0
 		while i < len(leaves):
-			print l, len(leaf_values)
-			leaves[i].first_child = TreeNode(leaf_values[l])
+			new_node_1 = TreeNode(leaf_values[l])
+			new_node_1.parent = leaves[i]
+			leaves[i].first_child = new_node_1
 
-			if len(leaf_values) - l != 1:
-				leaves[i].second_child = TreeNode(leaf_values[l+1])
+			if len(leaf_values) - l != 1: # edge case - uneven number of input leaves
+				new_node_2 = TreeNode(leaf_values[l+1])
+				new_node_2.parent = leaves[i]
+				leaves[i].second_child = new_node_2
 
 			i += 1
 			l += 2
 
 		return t
+
+	def get_edges(self):
+		edges = []
+		nodes = self.get_nodes()
+
+		for node in nodes:
+			if node.parent != None:
+				if node.parent.value != "ROOT":
+					edges.append(str(node.value) + str(node.parent.value))
+			else: # special case, only root node
+				edges.append(str(node.first_child.value) + str(node.second_child.value))
+				
+
+		return edges
 
 	def randomize(self):
 		self.root = self.build_tree(self.values, randomize=True)
@@ -35,7 +52,6 @@ class Tree():
 	def build_tree(self, values, randomize=False):
 		root = TreeNode("ROOT")
 		for value in values:
-			print "added %s" % value
 			root.add_child(TreeNode(value), randomize)
 		return root
 
@@ -59,7 +75,6 @@ class Tree():
 		print internal_nodes
 
 	def print_tree(self):
-		# print self.root.first_child, self.root.second_child
 		print "root: (%s, %s)" % (self.root.first_child.print_value(), self.root.second_child.print_value())
 
 class TreeNode():
@@ -130,3 +145,4 @@ class TreeNode():
 if __name__ == '__main__':
 	test_tree = Tree(['A', 'B', 'C', 'D', 'E'], from_leaves=True)
 	test_tree.print_tree()
+	print test_tree.get_edges()
