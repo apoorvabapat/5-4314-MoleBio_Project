@@ -10,6 +10,8 @@ class Tree():
 
 	def build_from_leaves(self, leaf_values, randomize, internal_value='*'):
 		n_internal = [i for i in range(0, len(leaf_values) - 1)]
+		labels = [i for i in range(0, len(leaf_values))]
+
 
 		t = Tree()
 		t.root = self.build_tree(n_internal, randomize)
@@ -19,11 +21,13 @@ class Tree():
 		l = 0
 		while i < len(leaves):
 			new_node_1 = TreeNode(leaf_values[l])
+			new_node_1.name = labels[l]
 			new_node_1.parent = leaves[i]
 			leaves[i].first_child = new_node_1
 
 			if len(leaf_values) - l != 1: # edge case - uneven number of input leaves
 				new_node_2 = TreeNode(leaf_values[l+1])
+				new_node_2.name = labels[l+1]
 				new_node_2.parent = leaves[i]
 				leaves[i].second_child = new_node_2
 
@@ -75,7 +79,10 @@ class Tree():
 		print internal_nodes
 
 	def print_tree(self):
-		print "root: (%s, %s)" % (self.root.first_child.print_value(), self.root.second_child.print_value())
+		print "(%s, %s)" % (self.root.first_child.print_value(), self.root.second_child.print_value())
+
+	def get_newick(self):
+		return "(%s, %s)" % (self.root.first_child.print_value(newick=True), self.root.second_child.print_value(newick=True))
 
 class TreeNode():
 	def __init__(self, value, parent=None, depth=0):
@@ -84,6 +91,7 @@ class TreeNode():
 		self.depth = depth
 		self.first_child = None
 		self.second_child = None
+		self.name = None
 
 	def get_path_to_parent(self):
 		next_node = self
@@ -129,15 +137,19 @@ class TreeNode():
 			nodes += self.second_child.get_child_nodes()
 		return nodes
 
-	def print_value(self):
+	def print_value(self, newick=False):
 		if self.first_child != None and self.second_child != None:
-			return "(" + self.first_child.print_value() + ", " + self.second_child.print_value() + ")"
+			return "(" + self.first_child.print_value(newick) + ", " + self.second_child.print_value(newick) + ")"
 		elif self.first_child != None and self.second_child == None:
-			return "(" + self.first_child.print_value() + ")"
+			return "" + self.first_child.print_value(newick) + ""
 		elif self.second_child != None:
-			return "(" + self.second_child.print_value() + ")"
+			return "" + self.second_child.print_value(newick) + ""
 		else:
-			return str(self.value)
+			if newick:
+				return str(self.name)
+			else:
+				return str(self.value)
+			
 		
 	def __str__(self):
 		return self.value

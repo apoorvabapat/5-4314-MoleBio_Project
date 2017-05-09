@@ -2,6 +2,16 @@ import math
 import tree
 import random
 
+from cStringIO import StringIO
+from Bio import Phylo, SeqIO
+from Bio.Phylo.Consensus import majority_consensus
+from itertools import permutations
+
+def read_tree(data):
+	print "data:", data
+	h = StringIO(data)
+	return Phylo.read(h, 'newick')
+
 class JukesCantor():
 	def __init__(self, mu=0.5):
 		self.mu = mu
@@ -77,71 +87,58 @@ def random_tree_likelihood(seq, model):
 
 if __name__ == "__main__":
 	test_seq = [
-		'TT',
-		'TT',
-		'GC',
-		'CA',
-		'TG',
-		'GT',
-		'GG',
-		'AA',
-		'AT',
-		'TA',
-		'TC'
+		'TTA',
+		'TTA',
+		'GCG',
+		'CAA',
+		'TGC',
+		'GTA',
+		'GGT',
+		'AAT',
 	]
+
+	sequences = []
+	for record in SeqIO.parse("primates.nex", 'nexus'):
+		sequences.append(str(record.seq)[:50])
 
 
 	model = JukesCantor()
 
-	site_one = [e[1] for e in test_seq]
-	init_t = tree.Tree(site_one, from_leaves=True)
-	init_internals = assign_internal_nodes(init_t)
-	
-	t = init_t
-	p = get_tree_likelihood(t, model, init_internals)
-	for i in range(0, 100):
-		p_0, t_0 = random_tree_likelihood(site_one, model)
+	all_sites = []
+	sites = len(sequences[0])
+	for site in range(0, sites):
+		all_sites.append([e[site] for e in sequences])
 
-		q = p_0 / p
+	all_trees = []
+	analyzed = 0
+	for site in all_sites:
+		analyzed+=1
+		print "analysing site %s of %s..." % (analyzed, sites)
 
-		if q > 1:
-			t = t_0
-			p = p_0
+		init_t = tree.Tree(site, from_leaves=True)
+		init_internals = assign_internal_nodes(init_t)
 
-	print "most likely tree: ", t.print_tree()
-	print "with likelihood: ", p
+		t = init_t
+		p = get_tree_likelihood(t, model, init_internals)
+		for i in range(0, 1000):
+			p_0, t_0 = random_tree_likelihood(site, model)
+
+			q = p_0 / p
+
+			if q > 1:
+				t = t_0
+				p = p_0
+
+		all_trees.append(t)
+
+		print "most likely tree: ", t.print_tree()
+		print "with likelihood: ", p
 
 
-	# edges = tree.get_edges()
-	# print "edges: ", edges
+	newick_trees = [e.get_newick() for e in all_trees]
+	temp_trees = [read_tree(t) for t in newick_trees]
+	majority = majority_consensus(temp_trees, 0.5)
 
-	# nucleotides = ['A','C','T','G']
+	Phylo.draw_ascii(majority)
 
-	# attempt_map = {}
-	# for edge in edges:
-	# 	e1 = edge[0]
-	# 	e2 = edge[1]
 
-	# 	if e1 not in nucleotides and e1 not in attempt_map:
-	# 		attempt_map[e1] = nucleotides[random.randrange(0,4)]
-
-	# 	if e2 not in nucleotides and e2 not in attempt_map:
-	# 		attempt_map[e2] = nucleotides[random.randrange(0,4)]
-	
-	# p = 0
-	# t = 1.0
-	# for edge in edges:
-	# 	edge_1 = edge[0]
-	# 	edge_2 = edge[1]
-
-	# 	if edge_1 in attempt_map:
-	# 		edge_1 = attempt_map[edge_1]
-	# 	if edge_2 in attempt_map:
-	# 		edge_2 = attempt_map[edge_2]
-
-	# 	if edge_1 == edge_2:
-	# 		p += math.log(model.p_same(t))
-	# 	else:
-	# 		p += math.log(model.p_change(t))
-
-	# print "Likelihood: ", p
